@@ -1,0 +1,55 @@
+:root {
+    --primary-text-color: #212529;
+    --secondary-text-color: rgba(255, 255, 255, 0.5);
+    --primary-background-color: #343a40;
+}
+
+.navbar-toggler-icon {
+    border-color: rgba(0, 0, 0, 0);
+    border-color: lightgreen;
+}
+
+.icon-btn {
+    max-width: 50px;
+    max-height: 50px;
+}
+
+.carousel-item {
+    height: 232px;
+    padding-bottom: 100%;
+    border-radius: 3px;
+}
+
+.carousel-img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.footer-icon {
+    max-width: 25px;
+    max-height: 25px;
+}
+
+/* Small devices (landscape phones, 576px and up) and Medium devices (tablets, 768px and up)*/
+@media (max-width: 768px) {
+    .nav-text {
+        display: none;
+    }
+    .p-responsive {
+        font-size: smaller;
+    }
+    .icon-btn {
+        margin: 0;
+        max-width: 30px;
+        max-height: 30px;
+    }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+}
