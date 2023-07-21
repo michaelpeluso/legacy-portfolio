@@ -4,6 +4,10 @@
     --primary-background-color: #343a40;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 .btn:focus {
     box-shadow: none;
 }
@@ -59,6 +63,10 @@
     .nav-text {
         display: none;
     }
+    .navbar-toggler {
+        display: flex;
+        justify-content: space-between;
+    }
     .p-responsive {
         font-size: smaller;
     }
@@ -70,5 +78,8 @@
 }
 
 /* Large devices (desktops, 992px and up) */
-@media (min-width: 992px) {
+@media (min-width: 768px) {
+    .navbar-toggler {
+        display: none;
+    }
 }

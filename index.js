@@ -1,5 +1,5 @@
-let isRotated = false;
-$("#toggleButton").click(function () {
-    $("#toggleButton").css("transform", isRotated ? "rotate(0deg)" : "rotate(45deg)");
-    isRotated = !isRotated;
+$(".toggleButton").click(function () {
+    const isRotated = $(this).data("rotated");
+    $(this).css("transform", isRotated ? "rotate(0deg)" : "rotate(45deg)");
+    $(this).data("rotated", !isRotated);
 });

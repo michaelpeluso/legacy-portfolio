@@ -17,10 +17,12 @@
     </head>
 
     <body class="bg-light">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div id="page-top"></div>
+        <nav class="navbar navbar-expand-md navbar-dark bg-dark sticky-top">
             <!-- <a class="navbar-brand jumbotron-heading" href="#">MP</a> -->
-            <button class="navbar-toggler border-0" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler border-0 w-100" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
                 <img src="images/icons/link.png" class="icon-btn" />
+                <span class="form-control-sm text-white text-right">Developer, Designer, and Digital Creator</span>
             </button>
             <div class="collapse navbar-collapse" id="navbarText">
                 <ul class="navbar-nav mr-auto">
@@ -30,6 +32,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/portfolio.html">Portfolio</a>
                     </li>
+                    <!--
                     <li class="nav-item">
                         <a class="nav-link" href="#">Education</a>
                     </li>
@@ -42,9 +45,10 @@
                     <li class="nav-item">
                         <a class="nav-link" href="#">Contact</a>
                     </li>
+                    -->
                 </ul>
-                <span class="nav-text navbar-text mr-3">Web Developer and Digital Creator</span>
             </div>
+            <span class="nav-text navbar-text mr-3 text-white">Developer, Designer, and Digital Creator</span>
         </nav>
 
         <main role="main">
@@ -125,14 +129,14 @@
 
                         <div class="col-md-4">
                             <div class="card mb-4 box-shadow">
-                                <a href="https://1drv.ms/v/s!ApwURloBSiBxpYdKltdBFCh3exD4DA?e=a5usCc" target="_blank">
+                                <a href="https://1drv.ms/v/s!ApwURloBSiBxp78dPyEySuFfj8pF3w?e=Sx0Cr3" target="_blank">
                                     <img class="card-img-top" src="Projects/Videos/Video_Gifs/Work_Hard_Play_Hard.gif" alt="Card image cap" />
                                 </a>
                                 <div class="card-body">
                                     <p class="card-text">A determined baseball team training to win the match.</p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="btn-group">
-                                            <a href="https://1drv.ms/v/s!ApwURloBSiBxpYdKltdBFCh3exD4DA?e=a5usCc" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
+                                            <a href="https://1drv.ms/v/s!ApwURloBSiBxp78dPyEySuFfj8pF3w?e=Sx0Cr3" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
                                         </div>
                                         <small class="text-muted">2023</small>
                                     </div>
@@ -151,11 +155,16 @@
                             </div>
 
                             <!-- Website Applications Development -->
-                            <div class="row row-cols-1 row-cols-md-2 align-items-md-center g-5">
-                                <div class="col d-flex flex-column gap-2">
-                                    <h2 class="fw-bold text-body-emphasis">Website Applications Development</h2>
+                            <div class="d-flex w-100 justify-content-between align-items-center mb-4">
+                                <h3 class="font-weight-normal d-inline">Website Applications Development</h3>
+                                <a class="btn d-inline" data-toggle="collapse" href="#collapse_WebAppDev" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                    <img class="toggleButton" src="/images/icons/plus.png" width="30px" alt="Image" style="transform-origin: center; transition: transform 0.25s" />
+                                </a>
+                            </div>
 
-                                    <ul class="nav justify-content-center list-unstyled d-flex my-3">
+                            <div class="collapse" id="collapse_WebAppDev">
+                                <div class="col d-flex flex-column my-4 p-0">
+                                    <ul class="nav justify-content-center list-unstyled d-flex mb-3">
                                         <li>
                                             <div class="w-100 m-1"><img class="footer-icon icon-btn img-fluid" src="images/icons/skills/html.png" /></div>
                                         </li>
@@ -195,44 +204,45 @@
                                         Entering high school in 2017 with a basic understanding of front-end web design encouraged numerous scholastic and personal projects. The professional world of development arrived in 2019 when I was tasked with
                                         writing an online research website. Currently, I am pursuing back-end development languages and frameworks with strong intentions of becoming a highly capable, full-stack developer.
                                     </p>
-                                    <a href="#" class="btn btn-primary btn-lg mt-3 col-3">Learn More</a>
                                 </div>
+                                <div class="row align-items-md-center g-5">
+                                    <div class="col">
+                                        <div class="row g-4">
+                                            <div class="col-md col-12 d-flex flex-column gap-2 text-md-left text-center mb-3">
+                                                <h4 class="font-weight-normal text-body-emphasis mb-3">Notable Accomplishments</h4>
+                                                <p class="text-body-secondary">1st Place - 2020 New Jersey Chemistry Olympics Research and Web Development event focused on Persistent Organic Pollutants</p>
+                                                <p class="text-body-secondary">2nd Place - 2019 New Jersey Chemistry Olympics Research and Web Development event focused on Microplastics Pollution</p>
+                                                <p class="text-body-secondary">rd Place - 2021 New Jersey Chemistry Olympics Research and Web Development event focused on CRISPR Research</p>
+                                            </div>
 
-                                <div class="col">
-                                    <div class="row row-cols-1 row-cols-sm-2 g-4">
-                                        <div class="col d-flex flex-column gap-2">
-                                            <h4 class="fw-semibold text-body-emphasis">Notable Accomplishments</h4>
-                                            <p class="text-body-secondary">1st Place - 2020 New Jersey Chemistry Olympics Research and Web Development event focused on Persistent Organic Pollutants</p>
-                                            <p class="text-body-secondary">2nd Place - 2019 New Jersey Chemistry Olympics Research and Web Development event focused on Microplastics Pollution</p>
-                                            <p class="text-body-secondary">rd Place - 2021 New Jersey Chemistry Olympics Research and Web Development event focused on CRISPR Research</p>
-                                        </div>
-
-                                        <div class="col d-flex flex-column gap-2">
-                                            <h4 class="fw-semibold text-body-emphasis">Related Courses</h4>
-                                            <p class="text-body-secondary">Advanced Programming for Information Technology</p>
-                                            <p class="text-body-secondary">Information Design Techniques</p>
-                                            <p class="text-body-secondary">Internet & Applications</p>
-                                            <p class="text-body-secondary">Principles of Operating Systems</p>
-                                            <p class="text-body-secondary">Computer Systems and Networks</p>
-                                            <p class="text-body-secondary">Programming Language Concepts</p>
-                                            <p class="text-body-secondary">The Complete 2023 Web Development Bootcamp (Udemy)</p>
+                                            <div class="col-md col-12 d-flex flex-column gap-2 text-md-left text-center">
+                                                <h4 class="font-weight-normal text-body-emphasis mb-3">Related Courses</h4>
+                                                <p class="text-body-secondary">Advanced Programming for Information Technology</p>
+                                                <p class="text-body-secondary">Information Design Techniques</p>
+                                                <p class="text-body-secondary">Internet & Applications</p>
+                                                <p class="text-body-secondary">Principles of Operating Systems</p>
+                                                <p class="text-body-secondary">Computer Systems and Networks</p>
+                                                <p class="text-body-secondary">Programming Language Concepts</p>
+                                                <p class="text-body-secondary">The Complete 2023 Web Development Bootcamp (Udemy)</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                                <a href="portfolio.html#WebAppDev" class="btn btn-dark btn-lg my-4">View Projects</a>
                             </div>
 
                             <div class="py-5"></div>
 
-                            <!-- Game Development-->
+                            <!-- Game Development -->
                             <div class="d-flex w-100 justify-content-between align-items-center mb-4">
                                 <h3 class="font-weight-normal d-inline">Game Development</h3>
-                                <a class="btn d-inline" data-toggle="collapse" href="#collapse_GameDevelopment" role="button" aria-expanded="false" aria-controls="collapseExample">
-                                    <img id="toggleButton" src="/images/icons/plus.png" width="30px" alt="Image" style="transform-origin: center; transition: transform 0.25s" />
+                                <a class="btn d-inline" data-toggle="collapse" href="#collapse_GameDev" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                    <img class="toggleButton" src="/images/icons/plus.png" width="30px" alt="Image" style="transform-origin: center; transition: transform 0.25s" />
                                 </a>
                             </div>
 
-                            <div class="collapse" id="collapse_GameDevelopment">
-                                <div class="col d-flex flex-column my-4">
+                            <div class="collapse" id="collapse_GameDev">
+                                <div class="col d-flex flex-column my-4 p-0">
                                     <ul class="nav justify-content-center list-unstyled d-flex mb-3">
                                         <li>
                                             <div class="w-100 m-1"><img class="footer-icon icon-btn img-fluid" src="images/icons/skills/python.png" /></div>
@@ -260,7 +270,7 @@
                                         </li>
                                     </ul>
 
-                                    <p class="text-body-secondary m-0 text-center">
+                                    <p class="text-body-secondary">
                                         Video games have always attracted my interest, though building one of my own offered exponentially higher feelings of satisfaction. Unity has always been the prominent tool used for such projects with the
                                         addition of Blender 3D for creating assets. Unity forced upon me the burden of learning C# as well as user interface theories.
                                     </p>
@@ -268,43 +278,187 @@
                                 <div class="row align-items-md-center g-5">
                                     <div class="col">
                                         <div class="row g-4">
-                                            <div class="col d-flex flex-column gap-2">
-                                                <h4 class="fw-semibold text-body-emphasis">Notable Accomplishments</h4>
-                                                <p class="text-body-secondary">1st Place - 2020 New Jersey Chemistry Olympics Research and Web Development event focused on Persistent Organic Pollutants</p>
-                                                <p class="text-body-secondary">2nd Place - 2019 New Jersey Chemistry Olympics Research and Web Development event focused on Microplastics Pollution</p>
-                                                <p class="text-body-secondary">3rd Place - 2021 New Jersey Chemistry Olympics Research and Web Development event focused on CRISPR Research</p>
-                                            </div>
-
-                                            <div class="col d-flex flex-column gap-2">
-                                                <h4 class="fw-semibold text-body-emphasis">Related Courses</h4>
-                                                <p class="text-body-secondary">Advanced Programming for Information Technology</p>
-                                                <p class="text-body-secondary">Information Design Techniques</p>
-                                                <p class="text-body-secondary">Internet & Applications</p>
-                                                <p class="text-body-secondary">Principles of Operating Systems</p>
-                                                <p class="text-body-secondary">Computer Systems and Networks</p>
-                                                <p class="text-body-secondary">Programming Language Concepts</p>
-                                                <p class="text-body-secondary">The Complete 2023 Web Development Bootcamp (Udemy)</p>
+                                            <div class="col-md col-12 d-flex flex-column gap-2 text-md-left text-center">
+                                                <h4 class="font-weight-normal text-body-emphasis mb-3">Related Courses</h4>
+                                                <p class="text-body-secondary">Physics C Mechanics</p>
+                                                <p class="text-body-secondary">Game Architecture and Design</p>
+                                                <p class="text-body-secondary">Game Design for XR</p>
+                                                <p class="text-body-secondary">User Interfaces for XR</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <a href="#" class="btn btn-dark btn-lg my-4">Learn More</a>
+                                <a href="portfolio.html#gameDevelopment" class="btn btn-dark btn-lg my-4">View Projects</a>
                             </div>
+
+                            <div class="py-5"></div>
+
+                            <!-- Photography -->
+                            <div class="d-flex w-100 justify-content-between align-items-center mb-4">
+                                <h3 class="font-weight-normal d-inline">Photography</h3>
+                                <a class="btn d-inline" data-toggle="collapse" href="#collapse_Photography" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                    <img class="toggleButton" src="/images/icons/plus.png" width="30px" alt="Image" style="transform-origin: center; transition: transform 0.25s" />
+                                </a>
+                            </div>
+
+                            <div class="collapse" id="collapse_Photography">
+                                <div class="col d-flex flex-column my-4 p-0">
+                                    <ul class="nav justify-content-center list-unstyled d-flex mb-3">
+                                        <li>
+                                            <div class="w-100 m-1"><img class="footer-icon icon-btn img-fluid" src="images/icons/skills/photoshop.png" /></div>
+                                        </li>
+                                        <li>
+                                            <div class="w-100 m-1"><img class="footer-icon icon-btn img-fluid" src="images/icons/skills/lightroom.png" /></div>
+                                        </li>
+                                    </ul>
+
+                                    <p class="text-body-secondary">
+                                        I tend to carry my camera everywhere I go and primarily shoot Raw and in Manual. I thoroughly enjoy portrait photography though I engage in all subcategories. I have a strong experience with composition and
+                                        post processing. Adobe Photoshop and Lightroom are used extensively.
+                                    </p>
+                                </div>
+                                <div class="row align-items-md-center g-5">
+                                    <div class="col">
+                                        <div class="row g-4">
+                                            <div class="col-md col-12 d-flex flex-column gap-2 text-md-left text-center mb-3">
+                                                <h4 class="font-weight-normal text-body-emphasis mb-3">Bodies</h4>
+                                                <p class="text-body-secondary">Nikon Z 6ii</p>
+                                                <p class="text-body-secondary">Nikon D 7000</p>
+                                            </div>
+
+                                            <div class="col-md col-12 d-flex flex-column gap-2 text-md-left text-center">
+                                                <h4 class="font-weight-normal text-body-emphasis mb-3">Lenses</h4>
+                                                <p class="text-body-secondary">Nikon Z 35mm f1.8</p>
+                                                <p class="text-body-secondary">Nikon Z 85mm f1.8</p>
+                                                <p class="text-body-secondary">Nikon F 70-200mm f2.8</p>
+                                                <p class="text-body-secondary">Nikon F 50mm f1.8</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="portfolio.html#photography" class="btn btn-dark btn-lg my-4">View Projects</a>
+                            </div>
+
+                            <div class="py-5"></div>
+
+                            <!-- Videography -->
+                            <div class="d-flex w-100 justify-content-between align-items-center mb-4">
+                                <h3 class="font-weight-normal d-inline">Videography</h3>
+                                <a class="btn d-inline" data-toggle="collapse" href="#collapse_Videography" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                    <img class="toggleButton" src="/images/icons/plus.png" width="30px" alt="Image" style="transform-origin: center; transition: transform 0.25s" />
+                                </a>
+                            </div>
+
+                            <div class="collapse" id="collapse_Videography">
+                                <div class="col d-flex flex-column my-4 p-0">
+                                    <ul class="nav justify-content-center list-unstyled d-flex mb-3">
+                                        <li>
+                                            <div class="w-100 m-1"><img class="footer-icon icon-btn img-fluid" src="images/icons/skills/premier-pro.png" /></div>
+                                        </li>
+                                        <li>
+                                            <div class="w-100 m-1"><img class="footer-icon icon-btn img-fluid" src="images/icons/skills/lightroom.png" /></div>
+                                        </li>
+                                    </ul>
+
+                                    <p class="text-body-secondary">I have recently been involving myself in both creating and compiling aesthetic video clips. This process usually involved hours in Adobe Lightroom and Premiere Pro.</p>
+                                </div>
+                                <div class="row align-items-md-center g-5">
+                                    <div class="col">
+                                        <div class="row g-4">
+                                            <div class="col-md col-12 d-flex flex-column gap-2 text-md-left text-center mb-3">
+                                                <h4 class="font-weight-normal text-body-emphasis mb-3">Bodies</h4>
+                                                <p class="text-body-secondary">Nikon Z 6ii</p>
+                                            </div>
+
+                                            <div class="col-md col-12 d-flex flex-column gap-2 text-md-left text-center">
+                                                <h4 class="font-weight-normal text-body-emphasis mb-3">Lenses</h4>
+                                                <p class="text-body-secondary">Nikon Z 35mm f1.8</p>
+                                                <p class="text-body-secondary">Nikon Z 85mm f1.8</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="portfolio.html#videography" class="btn btn-dark btn-lg my-4">View Projects</a>
+                            </div>
+
+                            <div class="py-5"></div>
+
+                            <!-- Computer Modeling -->
+                            <div class="d-flex w-100 justify-content-between align-items-center mb-4">
+                                <h3 class="font-weight-normal d-inline">Computer Modeling</h3>
+                                <a class="btn d-inline" data-toggle="collapse" href="#collapse_Modeling" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                    <img class="toggleButton" src="/images/icons/plus.png" width="30px" alt="Image" style="transform-origin: center; transition: transform 0.25s" />
+                                </a>
+                            </div>
+
+                            <div class="collapse" id="collapse_Modeling">
+                                <div class="col d-flex flex-column my-4 p-0">
+                                    <ul class="nav justify-content-center list-unstyled d-flex mb-3">
+                                        <li>
+                                            <div class="w-100 m-1"><img class="footer-icon icon-btn img-fluid" src="images/icons/skills/blender.png" /></div>
+                                        </li>
+                                        <li>
+                                            <div class="w-100 m-1"><img class="footer-icon icon-btn img-fluid" src="images/icons/skills/lightroom.png" /></div>
+                                        </li>
+                                    </ul>
+
+                                    <p class="text-body-secondary">
+                                        Computer aided three dimensional design has been a skill of mine since 2018. I have a strong experience in Blender 3D and heavy knowledge in color theory, textures, normals, light maps, etc.
+                                    </p>
+                                </div>
+                                <a href="portfolio.html#modeling" class="btn btn-dark btn-lg my-4">View Projects</a>
+                            </div>
+
+                            <div class="py-5"></div>
+
+                            <!-- Graphic Design -->
+                            <div class="d-flex w-100 justify-content-between align-items-center mb-4">
+                                <h3 class="font-weight-normal d-inline">Graphic Design</h3>
+                                <a class="btn d-inline" data-toggle="collapse" href="#collapse_graphicDesign" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                    <img class="toggleButton" src="/images/icons/plus.png" width="30px" alt="Image" style="transform-origin: center; transition: transform 0.25s" />
+                                </a>
+                            </div>
+
+                            <div class="collapse" id="collapse_graphicDesign">
+                                <div class="col d-flex flex-column my-4 p-0">
+                                    <ul class="nav justify-content-center list-unstyled d-flex mb-3">
+                                        <li>
+                                            <div class="w-100 m-1"><img class="footer-icon icon-btn img-fluid" src="images/icons/skills/publisher.png" /></div>
+                                        </li>
+                                        <li>
+                                            <div class="w-100 m-1"><img class="footer-icon icon-btn img-fluid" src="images/icons/skills/canva.png" /></div>
+                                        </li>
+                                        <li>
+                                            <div class="w-100 m-1"><img class="footer-icon icon-btn img-fluid" src="images/icons/skills/photoshop.png" /></div>
+                                        </li>
+                                        <li>
+                                            <div class="w-100 m-1"><img class="footer-icon icon-btn img-fluid" src="images/icons/skills/lightroom.png" /></div>
+                                        </li>
+                                    </ul>
+
+                                    <p class="text-body-secondary">Due to my background in both photography game development, I have picked up plenty of skills in creating graphics and visuals.</p>
+                                </div>
+                                <a href="portfolio.html#graphicDesign" class="btn btn-dark btn-lg my-4">View Projects</a>
+                            </div>
+
+                            <!---->
                         </div>
                     </div>
                 </div>
             </div>
         </main>
 
+        <p class="font-weight-light form-control-sm text-muted container text-center">Available at <a class="text-muted" href="mfpel29@gmail.com">mfpel29@gmail.com</a> or 973 975-6701</p>
+
         <div class="container">
-            <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
-                <div class="col-md-4 d-flex align-items-center">
+            <footer class="d-flex flex-wrap justify-content-between align-items-baseline py-3 my-4 border-top">
+                <div class="col-md-4 col d-flex align-items-center">
                     <span class="mb-3 mb-md-0 text-muted">Michael Peluso | 2023</span>
                 </div>
 
-                <a class="mb-3 mb-md-0 text-muted" href="#">Back to top</a>
+                <a class="mb-3 m-0 text-muted" href="#page-top">Back to top</a>
 
-                <ul class="nav col-md-4 justify-content-end list-unstyled d-flex">
+                <ul class="nav col-md-4 col-12 justify-content-md-end justify-content-center list-unstyled d-flex m-3 mt-md-5">
                     <li>
                         <a href="https://github.com/michaelpeluso" class="w-100 m-3"><img class="footer-icon img-fluid" src="images/icons/github.png" /></a>
                     </li>
