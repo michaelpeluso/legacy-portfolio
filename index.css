@@ -4,6 +4,10 @@
     --primary-background-color: #343a40;
 }
 
+.btn:focus {
+    box-shadow: none;
+}
+
 .navbar-toggler-icon {
     border-color: rgba(0, 0, 0, 0);
     border-color: lightgreen;
