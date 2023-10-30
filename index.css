@@ -56,6 +56,10 @@ html {
 .footer-icon {
     max-width: 35px;
 }
+.rotate90 {
+    transform: rotate(135deg);
+    transition: transform 0.5s ease;
+}
 
 /* Small devices (landscape phones, 576px and up) and Medium devices (tablets, 768px and up)*/
 @media (max-width: 768px) {
