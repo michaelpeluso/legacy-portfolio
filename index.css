@@ -18,8 +18,10 @@ html {
 }
 
 .icon-btn {
-    max-width: 50px;
-    max-height: 50px;
+    max-width: 55px;
+    max-height: 55px;
+    min-width: 30px;
+    min-height: 30px;
 }
 
 .carousel-item {
@@ -62,7 +64,7 @@ html {
 }
 
 /* Small devices (landscape phones, 576px and up) and Medium devices (tablets, 768px and up)*/
-@media (max-width: 768px) {
+@media (max-width: 576px) {
     .nav-text {
         display: none;
     }
@@ -81,8 +83,18 @@ html {
 }
 
 /* Large devices (desktops, 992px and up) */
-@media (min-width: 768px) {
+@media (min-width: 576px) {
     .navbar-toggler {
         display: none;
+    }
+    .zoom {
+        position: inherit;
+        transition: transform 0.2s;
+    }
+    .zoom:hover {
+        z-index: 10;
+        -ms-transform: scale(1.5); /* IE 9 */
+        -webkit-transform: scale(1.5); /* Safari 3-8 */
+        transform: scale(1.5);
     }
 }

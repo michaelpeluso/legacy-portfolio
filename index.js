@@ -10,13 +10,8 @@ document.addEventListener("DOMContentLoaded", function () {
         .then((response) => response.text())
         .then((data) => {
             $("nav").html(data);
-
-            var currentFile = window.location.pathname.split("/")[1];
-            if (currentFile == "index.html") {
-                $("#nav-home").addClass("active");
-            } else {
-                $("#nav-" + currentFile).addClass("active");
-            }
+            var currentFile = window.location.pathname.split("/")[1].split(".")[0];
+            $("#nav-" + currentFile).addClass("active");
         });
     fetch("/templates/footer.html")
         .then((response) => response.text())
