@@ -1,3 +1,6 @@
+/*
+    GLOBAL
+*/
 :root {
     --primary-text-color: #212529;
     --secondary-text-color: rgba(255, 255, 255, 0.5);
@@ -24,6 +27,14 @@ html {
     min-height: 30px;
 }
 
+/*
+    CARDS
+*/
+.card {
+    border: none;
+}
+
+/*
 .carousel-item {
     padding-bottom: 100%;
     border-radius: 3px;
@@ -54,6 +65,7 @@ html {
 .carousel-inner:not(.carousel-img) {
     filter: none;
 }
+*/
 
 .footer-icon {
     max-width: 35px;
