@@ -5,11 +5,11 @@ const ctx = canvas.getContext('2d');
 const totalPixels = canvas.width * canvas.height;
 
 const frameDelayMilliseconds = 40;
-const pixelChangeThreshold = 40; // 0 - 255
+const pixelChangeThreshold = 35; // 0 - 255
 const pixelCountThreshold = totalPixels * 0;
 const medianFilterRadius = 2;
 const minPixelGroup = 250;
-const maxBoxDistance = 100;
+const minBoxDistance = 200;
 
 let prevFrame = null;
 let motionDetected = false;
@@ -23,8 +23,8 @@ navigator.mediaDevices.getUserMedia({ video: true })
         video.onloadedmetadata = () => video.play();
     })
     .catch(err => console.error('Error accessing camera:', err));
-      
-
+        
+    
 // Function to process frames at a controlled frame rate
 function processFrames() {
     setTimeout(() => {
@@ -293,7 +293,7 @@ function joinBoundingBoxes(boxes) {
                 box.maxY < joinedBox.minY || box.minY > joinedBox.maxY
             );
 
-            if (distance <= maxBoxDistance || intersecting) {
+            if (distance <= minBoxDistance || intersecting) {
                 joinedBox.minX = Math.min(joinedBox.minX, box.minX);
                 joinedBox.minY = Math.min(joinedBox.minY, box.minY);
                 joinedBox.maxX = Math.max(joinedBox.maxX, box.maxX);
