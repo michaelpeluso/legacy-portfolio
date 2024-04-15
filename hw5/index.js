@@ -76,7 +76,7 @@ function processFrames() {
 }
 
 
-/* DETECT MOTION */
+/* DETECT MOTION FUNCTION */
 
 // main detection function to repeat over every frame
 function detectMotion() {
