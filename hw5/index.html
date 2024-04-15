@@ -43,10 +43,23 @@
             display: block;
         }
 
-        #log-container {
+        #info-container {
             flex: 1;
             overflow-y: auto;
-            padding: 10px;
+            padding: 0px 0px 20px 20px;
+        }
+
+        .input-div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            width: 250px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            vertical-align: middle;
         }
 
         #motion-indicator {
@@ -74,11 +87,45 @@
 <body>
     <div class="container">
         <div id="video-wrapper">
-            <video id="webcam" style="transform: scaleX(-1)" autoplay></video>
             <canvas id="webcam_processed" style="transform: scaleX(-1)"></canvas>
+            <video id="webcam" style="transform: scaleX(-1)" autoplay></video>
         </div>
         
-        <div id="log-container">
+        <div id="info-container">
+            <div>
+                <h3 style="margin-top: 0;">Settings</h3>
+                <div class="input-div" title="Interval in milliseconds between each calculation.">
+                    <label for="frame-delay">Frame Delay Interval: <span id="frame-delay-value">40</span></label>
+                    <input type="range" id="frame-delay" min="1" max="100" value="40">
+                </div>
+                <br />
+                <div class="input-div" title="Threshold for detecting pixel changes between frames.">
+                    <label for="pixel-change-threshold">Pixel Change Threshold: <span id="pixel-change-threshold-value">40</span></label>
+                    <input type="range" id="pixel-change-threshold" min="0" max="255" value="40">
+                </div>
+                <br />
+                <div class="input-div" title="Minimum number of adjacent marked pixels to trigger movement.">
+                    <label for="min-pixel-group">Minimum Pixel Group Size: <span id="min-pixel-group-value">250</span></label>
+                    <input type="range" id="min-pixel-group" min="1" max="1000" value="250">
+                </div>
+                <br />
+                <div class="input-div" title="Minimum distance between motion boxes to consider them separate.">
+                    <label for="min-box-distance">Minimum Box Separation Distance: <span id="min-box-distance-value">100</span></label>
+                    <input type="range" id="min-box-distance" min="1" max="1000" value="100">
+                </div>
+                <br />
+                <div class="input-div" title="Percentage of marked pixels required to trigger movement.">
+                    <label for="pixel-count-threshold">Pixel Count Threshold: <span id="pixel-count-threshold-value">10%</span></label>
+                    <input type="range" id="pixel-count-threshold" step=".01" min="0" max="1" value=".1">
+                </div>
+                <br />
+                <div class="input-div" title="Radius of Gaussian filter map for image processing.">
+                    <label for="gaussian-filter-radius">Gaussian Filter Radius: <span id="gaussian-filter-radius-value">1</span></label>
+                    <input type="range" id="gaussian-filter-radius" min="0" max="4" value="1">
+                </div>                
+            </div>
+            <br />
+
             <div id="motion-indicator"></div>
             <div id="log"></div>
         </div>
