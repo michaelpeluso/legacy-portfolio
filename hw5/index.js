@@ -1,13 +1,14 @@
 /* VARIABLES */
 
 // imported variables
-const video = document.getElementById('webcam');
-const canvas = document.getElementById('webcam_processed');
-const motionIndicator = document.getElementById('motion-indicator');
-const ctx = canvas.getContext('2d');
+const video = document.getElementById("webcam");
+const canvas = document.getElementById("webcam_processed");
+const motionIndicator = document.getElementById("motion-indicator");
+const ctx = canvas.getContext("2d");
 const totalPixels = canvas.width * canvas.height;
 
 // cache variables
+let changeVideoBuffer = false;
 let prevFrame = null;
 let motionDetected = false;
 let changedPixelsList = [];
@@ -16,79 +17,104 @@ let highlights = [];
 // user defined variables
 let frameDelayMilliseconds = 40;
 let pixelChangeThreshold = 40; // 0 - 255
-let pixelCountThreshold = totalPixels * 0;
+let pixelCountThreshold = totalPixels * 0.1;
 let minPixelGroup = 250;
 let minBoxDistance = 200;
 let gaussianFilterRadius = 1;
 
+let isBlack = true;
+let focusProcessed = false;
 
+/* USER VARIABLE FUNCTIONS / EVENT LISTENERS */
 
-/* USER VARIABLE FUNCTIONS */
-
-// update user defined variables 
-function updateVariables() {
+// update user defined variables with event listeners
+document.getElementById("frame-delay").addEventListener("input", function () {
     frameDelayMilliseconds = parseInt(document.getElementById("frame-delay").value);
     document.getElementById("frame-delay-value").textContent = frameDelayMilliseconds;
+});
 
+document.getElementById("pixel-change-threshold").addEventListener("input", function () {
     pixelChangeThreshold = parseInt(document.getElementById("pixel-change-threshold").value);
     document.getElementById("pixel-change-threshold-value").textContent = pixelChangeThreshold;
+});
 
+document.getElementById("min-pixel-group").addEventListener("input", function () {
     minPixelGroup = parseInt(document.getElementById("min-pixel-group").value);
     document.getElementById("min-pixel-group-value").textContent = minPixelGroup;
+});
 
+document.getElementById("min-box-distance").addEventListener("input", function () {
     minBoxDistance = parseInt(document.getElementById("min-box-distance").value);
     document.getElementById("min-box-distance-value").textContent = minBoxDistance;
+});
 
-    pixelCountThreshold = (totalPixels * parseFloat(document.getElementById("pixel-count-threshold").value));
+document.getElementById("pixel-count-threshold").addEventListener("input", function () {
+    pixelCountThreshold = totalPixels * parseFloat(document.getElementById("pixel-count-threshold").value);
     document.getElementById("pixel-count-threshold-value").textContent = parseInt(document.getElementById("pixel-count-threshold").value * 100) + "%";
+});
 
+document.getElementById("gaussian-filter-radius").addEventListener("input", function () {
     gaussianFilterRadius = parseInt(document.getElementById("gaussian-filter-radius").value);
     document.getElementById("gaussian-filter-radius-value").textContent = gaussianFilterRadius;
-}
+});
 
-// add event listeners to each slider
-document.getElementById("frame-delay").addEventListener("input", updateVariables);
-document.getElementById("pixel-change-threshold").addEventListener("input", updateVariables);
-document.getElementById("min-pixel-group").addEventListener("input", updateVariables);
-document.getElementById("min-box-distance").addEventListener("input", updateVariables);
-document.getElementById("pixel-count-threshold").addEventListener("input", updateVariables);
-document.getElementById("gaussian-filter-radius").addEventListener("input", updateVariables);
+document.getElementById("BaW").addEventListener("change", (event) => (isBlack = !event.target.checked));
 
+document.getElementById("return-to-webcam").addEventListener("click", function () {
+    document.getElementById("return-to-webcam").classList.add("hidden");
+    changeVideoBuffer = true;
+
+    playWebcam();
+});
+
+// uploadVideoInput event listener
+document.getElementById("upload-video").addEventListener("change", function () {
+    changeVideoBuffer = true;
+    const uploadedFile = this.files[0];
+    document.getElementById("return-to-webcam").classList.remove("hidden");
+
+    if (uploadedFile) {
+        const blobURL = URL.createObjectURL(uploadedFile);
+
+        // clear existing srcObject
+        video.srcObject = null;
+        video.src = blobURL;
+
+        // play the video
+        video.onloadedmetadata = () => {
+            video.oncanplaythrough = () => {
+                video.play();
+            };
+        };
+    } else {
+        // Use webcam as the source
+        playWebcam();
+    }
+});
 
 /* FRAME RATE FUNCTIONS */
 
-// Get live video feed
-navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => {
-        video.srcObject = stream;
-        video.onloadedmetadata = () => video.play();
-    })
-    .catch(err => console.error('Error accessing camera:', err));
-
-
-// Function to process frames at a controlled frame rate
+// process frames at a controlled frame rate
 function processFrames() {
     setTimeout(() => {
-        motionIndicator.classList.remove('active');
+        motionIndicator.classList.remove("active");
         detectMotion();
-        processFrames(); // Schedule the next frame processing
+        processFrames(); // schedule the next frame processing
     }, frameDelayMilliseconds);
 }
-
 
 /* DETECT MOTION FUNCTION */
 
 // main detection function to repeat over every frame
 function detectMotion() {
+    if (changeVideoBuffer) {
+        changeVideoBuffer = false;
+        return;
+    }
+
     // Capture current frame from video
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     let currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    // Convert current frame to grayscale
-    convertToGrayscale(ctx, currentFrame);
-
-    // Apply GaussianBlur filter
-    applyGaussianBlur(ctx, currentFrame, gaussianFilterRadius);
 
     // ignore equivalent frames
     if (!prevFrame) {
@@ -96,23 +122,28 @@ function detectMotion() {
         return;
     }
 
+    // Convert current frame to grayscale
+    convertToGrayscale(ctx, currentFrame);
+
+    // Apply GaussianBlur filter
+    applyGaussianBlur(ctx, currentFrame, gaussianFilterRadius);
+
     // Clear the list before detecting motion
-    changedPixelsList = locatedChangedPixels(prevFrame, currentFrame, pixelChangeThreshold); 
+    changedPixelsList = locatedChangedPixels(prevFrame, currentFrame, pixelChangeThreshold);
+
+    // highlight motion
+    highlightMotion(changedPixelsList);
 
     // Update motion detection flag (account for all 4 values)
     motionDetected = changedPixelsList.length / 4 > pixelCountThreshold;
 
-    // highlight motion
-    highlightMotion(changedPixelsList);
-    
     // draw red rectangle around motion
     if (motionDetected) {
         locateMotion(changedPixelsList);
     }
-    
+
     prevFrame = currentFrame;
 }
-
 
 /* HELPER FUNCTIONS */
 
@@ -128,7 +159,7 @@ function locatedChangedPixels(prevFrame, currentFrame, threshold) {
         const diff = Math.abs(currentData[i] - prevData[i]);
         if (diff > threshold) {
             const x = (i / 4) % canvas.width;
-            const y = Math.floor((i / 4) / canvas.width);
+            const y = Math.floor(i / 4 / canvas.width);
             changedPixelsList.push({ x, y });
         }
     }
@@ -154,7 +185,6 @@ function convertToGrayscale(ctx, imageData) {
     ctx.putImageData(imageData, 0, 0);
 }
 
-
 // Gaussian blur filter for grayscale image
 function applyGaussianBlur(ctx, imageData, radius) {
     const width = imageData.width;
@@ -166,7 +196,7 @@ function applyGaussianBlur(ctx, imageData, radius) {
     const factor = weights.reduce((acc, val) => acc + val, 0);
 
     // compute weighted sums for each weight
-    const weightedSums = weights.map(w => w / factor);
+    const weightedSums = weights.map((w) => w / factor);
 
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
@@ -183,14 +213,13 @@ function applyGaussianBlur(ctx, imageData, radius) {
                 }
             }
 
-            const dataIndex = y * width + x;
+            const dataIndex = height * width;
             data[dataIndex] = intensity;
         }
     }
 
     ctx.putImageData(new ImageData(data, width, height), 0, 0);
 }
-
 
 // calculate Gaussian weights based on radius
 function calculateGaussianWeights(radius) {
@@ -206,7 +235,6 @@ function calculateGaussianWeights(radius) {
     return weights;
 }
 
-
 // find groups of adjacent marked pixels
 function findMotionGroups(changedPixelsList) {
     const visited = new Set();
@@ -220,7 +248,7 @@ function findMotionGroups(changedPixelsList) {
 
     // check each marked pixel to adjacent marked pixels
     for (const { x, y } of changedPixelsList) {
-         // skip marked pixels
+        // skip marked pixels
         if (!isUnmarked({ x, y })) continue;
 
         const stack = [{ x, y }];
@@ -250,18 +278,18 @@ function findMotionGroups(changedPixelsList) {
     return groups;
 }
 
-
 // highlight marked pixels / motion
 function highlightMotion(changedPixelsList) {
-    ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (isBlack) {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = "white";
     for (const { x, y } of changedPixelsList) {
         ctx.fillRect(x, y, 1, 1);
     }
 }
-
 
 // draw squares around marked groups
 function locateMotion(changedPixelsList) {
@@ -297,16 +325,15 @@ function locateMotion(changedPixelsList) {
         const height = maxY - minY;
 
         if (width > 0 && height > 0) {
-            ctx.strokeStyle = 'red';
+            ctx.strokeStyle = "red";
             ctx.lineWidth = 2;
             ctx.strokeRect(minX, minY, width, height);
 
             // update motion indicator and log
-            updateIndicatorAndLog(true)
+            updateIndicatorAndLog(true);
         }
     }
 }
-
 
 // join intersecting bounding boxes and remove inner boxes
 function joinBoundingBoxes(boxes) {
@@ -326,11 +353,7 @@ function joinBoundingBoxes(boxes) {
 
         for (const joinedBox of joinedBoxes) {
             // box is completely inside another box
-            if (box.minX >= joinedBox.minX && 
-                box.maxX <= joinedBox.maxX && 
-                box.minY >= joinedBox.minY && 
-                box.maxY <= joinedBox.maxY
-            ) {
+            if (box.minX >= joinedBox.minX && box.maxX <= joinedBox.maxX && box.minY >= joinedBox.minY && box.maxY <= joinedBox.maxY) {
                 isInnerBox = true;
                 break;
             }
@@ -343,10 +366,7 @@ function joinBoundingBoxes(boxes) {
             const distance = Math.sqrt((boxACenterX - boxBCenterX) ** 2 + (boxACenterY - boxBCenterY) ** 2);
 
             // Check if boxes are too close or intersecting
-            const intersecting = !(
-                box.maxX < joinedBox.minX || box.minX > joinedBox.maxX ||
-                box.maxY < joinedBox.minY || box.minY > joinedBox.maxY
-            );
+            const intersecting = !(box.maxX < joinedBox.minX || box.minX > joinedBox.maxX || box.maxY < joinedBox.minY || box.minY > joinedBox.maxY);
 
             if (distance <= minBoxDistance || intersecting) {
                 joinedBox.minX = Math.min(joinedBox.minX, box.minX);
@@ -360,29 +380,43 @@ function joinBoundingBoxes(boxes) {
 
         // add the box if it didn't join with existing boxes and isn't an inner box
         if (!joined && !isInnerBox) {
-            joinedBoxes.push({ ...box }); 
+            joinedBoxes.push({ ...box });
         }
     }
 
     return joinedBoxes;
 }
 
-
 // Function to update the motion indicator
 function updateIndicatorAndLog(motionDetected) {
-        motionIndicator.classList.add('active');
-        
-            const currentTime = new Date().toLocaleTimeString();
-        if (log.firstChild == null || log.firstChild.textContent !== `Motion detected at ${currentTime}`) {
-            const logEntry = document.createElement('div');
-            logEntry.textContent = `Motion detected at ${currentTime}`;
-            log.insertBefore(logEntry, log.firstChild);
-        }
+    motionIndicator.classList.add("active");
+
+    const currentTime = new Date().toLocaleTimeString();
+    if (log.firstChild == null || log.firstChild.textContent !== `Motion detected at ${currentTime}`) {
+        const logEntry = document.createElement("div");
+        logEntry.textContent = `Motion detected at ${currentTime}`;
+        log.insertBefore(logEntry, log.firstChild);
+    }
 }
 
-
 /* PLAY VIDEOS */
-video.addEventListener('play', () => {
+
+// play webcam
+function playWebcam() {
+    navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+            video.srcObject = stream;
+            video.onloadedmetadata = () => video.play();
+        })
+        .catch((err) => console.error("Error accessing camera:", err));
+
+    processFrames();
+}
+
+playWebcam();
+
+video.addEventListener("play", () => {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     requestAnimationFrame(processFrames);
