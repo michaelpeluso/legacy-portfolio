@@ -1,136 +1,423 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Motion Detection</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+/* VARIABLES */
+
+// imported variables
+const video = document.getElementById("webcam");
+const canvas = document.getElementById("webcam_processed");
+const motionIndicator = document.getElementById("motion-indicator");
+const ctx = canvas.getContext("2d");
+const totalPixels = canvas.width * canvas.height;
+
+// cache variables
+let changeVideoBuffer = false;
+let prevFrame = null;
+let motionDetected = false;
+let changedPixelsList = [];
+let highlights = [];
+
+// user defined variables
+let frameDelayMilliseconds = 40;
+let pixelChangeThreshold = 40; // 0 - 255
+let pixelCountThreshold = totalPixels * 0.1;
+let minPixelGroup = 250;
+let minBoxDistance = 200;
+let gaussianFilterRadius = 1;
+
+let isBlack = true;
+let focusProcessed = false;
+
+/* USER VARIABLE FUNCTIONS / EVENT LISTENERS */
+
+// update user defined variables with event listeners
+document.getElementById("frame-delay").addEventListener("input", function () {
+    frameDelayMilliseconds = parseInt(document.getElementById("frame-delay").value);
+    document.getElementById("frame-delay-value").textContent = frameDelayMilliseconds;
+});
+
+document.getElementById("pixel-change-threshold").addEventListener("input", function () {
+    pixelChangeThreshold = parseInt(document.getElementById("pixel-change-threshold").value);
+    document.getElementById("pixel-change-threshold-value").textContent = pixelChangeThreshold;
+});
+
+document.getElementById("min-pixel-group").addEventListener("input", function () {
+    minPixelGroup = parseInt(document.getElementById("min-pixel-group").value);
+    document.getElementById("min-pixel-group-value").textContent = minPixelGroup;
+});
+
+document.getElementById("min-box-distance").addEventListener("input", function () {
+    minBoxDistance = parseInt(document.getElementById("min-box-distance").value);
+    document.getElementById("min-box-distance-value").textContent = minBoxDistance;
+});
+
+document.getElementById("pixel-count-threshold").addEventListener("input", function () {
+    pixelCountThreshold = totalPixels * parseFloat(document.getElementById("pixel-count-threshold").value);
+    document.getElementById("pixel-count-threshold-value").textContent = parseInt(document.getElementById("pixel-count-threshold").value * 100) + "%";
+});
+
+document.getElementById("gaussian-filter-radius").addEventListener("input", function () {
+    gaussianFilterRadius = parseInt(document.getElementById("gaussian-filter-radius").value);
+    document.getElementById("gaussian-filter-radius-value").textContent = gaussianFilterRadius;
+});
+
+document.getElementById("BaW").addEventListener("change", (event) => (isBlack = !event.target.checked));
+
+document.getElementById("return-to-webcam").addEventListener("click", function () {
+    document.getElementById("return-to-webcam").classList.add("hidden");
+    changeVideoBuffer = true;
+
+    playWebcam();
+});
+
+// uploadVideoInput event listener
+document.getElementById("upload-video").addEventListener("change", function () {
+    changeVideoBuffer = true;
+    const uploadedFile = this.files[0];
+    document.getElementById("return-to-webcam").classList.remove("hidden");
+
+    if (uploadedFile) {
+        const blobURL = URL.createObjectURL(uploadedFile);
+
+        // clear existing srcObject
+        video.srcObject = null;
+        video.src = blobURL;
+
+        // play the video
+        video.onloadedmetadata = () => {
+            video.oncanplaythrough = () => {
+                video.play();
+            };
+        };
+    } else {
+        // Use webcam as the source
+        playWebcam();
+    }
+});
+
+/* FRAME RATE FUNCTIONS */
+
+// process frames at a controlled frame rate
+function processFrames() {
+    setTimeout(() => {
+        motionIndicator.classList.remove("active");
+        detectMotion();
+        processFrames(); // schedule the next frame processing
+    }, frameDelayMilliseconds);
+}
+
+/* DETECT MOTION FUNCTION */
+
+// main detection function to repeat over every frame
+function detectMotion() {
+    if (changeVideoBuffer) {
+        changeVideoBuffer = false;
+        return;
+    }
+
+    // Capture current frame from video
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    let currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // ignore equivalent frames
+    if (!prevFrame) {
+        prevFrame = currentFrame;
+        return;
+    }
+
+    // Convert current frame to grayscale
+    convertToGrayscale(ctx, currentFrame);
+
+    // Apply GaussianBlur filter
+    applyGaussianBlur(ctx, currentFrame, gaussianFilterRadius);
+
+    // Clear the list before detecting motion
+    changedPixelsList = locatedChangedPixels(prevFrame, currentFrame, pixelChangeThreshold);
+
+    // highlight motion
+    highlightMotion(changedPixelsList);
+
+    // Update motion detection flag (account for all 4 values)
+    motionDetected = changedPixelsList.length / 4 > pixelCountThreshold;
+
+    // draw red rectangle around motion
+    if (motionDetected) {
+        locateMotion(changedPixelsList);
+    }
+
+    prevFrame = currentFrame;
+}
+
+/* HELPER FUNCTIONS */
+
+// located changed pixels
+function locatedChangedPixels(prevFrame, currentFrame, threshold) {
+    // restructure variables
+    const { data: prevData } = prevFrame;
+    const { data: currentData } = currentFrame;
+    changedPixelsList = [];
+
+    // compare pixels between frames
+    for (let i = 0; i < currentData.length; i += 4) {
+        const diff = Math.abs(currentData[i] - prevData[i]);
+        if (diff > threshold) {
+            const x = (i / 4) % canvas.width;
+            const y = Math.floor(i / 4 / canvas.width);
+            changedPixelsList.push({ x, y });
+        }
+    }
+
+    return changedPixelsList;
+}
+
+// convert image to grayscale
+function convertToGrayscale(ctx, imageData) {
+    const data = imageData.data;
+    const length = data.length;
+
+    for (let i = 0; i < length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        // apply grayscale filter
+        const grayscaleValue = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        data[i] = data[i + 1] = data[i + 2] = grayscaleValue;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+}
+
+// Gaussian blur filter for grayscale image
+function applyGaussianBlur(ctx, imageData, radius) {
+    const width = imageData.width;
+    const height = imageData.height;
+    const data = new Uint8ClampedArray(imageData.data);
+
+    // sum of the weights
+    const weights = calculateGaussianWeights(radius);
+    const factor = weights.reduce((acc, val) => acc + val, 0);
+
+    // compute weighted sums for each weight
+    const weightedSums = weights.map((w) => w / factor);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            let intensity = 0;
+
+            // apply gaussian blur
+            for (let ky = -radius; ky <= radius; ky++) {
+                for (let kx = -radius; kx <= radius; kx++) {
+                    const px = Math.min(width - 1, Math.max(0, x + kx));
+                    const py = Math.min(height - 1, Math.max(0, y + ky));
+                    const index = py * width + px;
+
+                    intensity += data[index] * weightedSums[(ky + radius) * (2 * radius + 1) + (kx + radius)];
+                }
+            }
+
+            const dataIndex = height * width;
+            data[dataIndex] = intensity;
+        }
+    }
+
+    ctx.putImageData(new ImageData(data, width, height), 0, 0);
+}
+
+// calculate Gaussian weights based on radius
+function calculateGaussianWeights(radius) {
+    const weights = [];
+    const sigma = radius / 2.0;
+    const factor = 1 / (sigma * Math.sqrt(2 * Math.PI));
+
+    for (let i = -radius; i <= radius; i++) {
+        const weight = factor * Math.exp(-(i * i) / (2 * sigma * sigma));
+        weights.push(weight);
+    }
+
+    return weights;
+}
+
+// find groups of adjacent marked pixels
+function findMotionGroups(changedPixelsList) {
+    const visited = new Set();
+    const groups = [];
+
+    // keep track of unmarked pixels
+    const unmarkedPixels = new Set(changedPixelsList.map(({ x, y }) => `${x},${y}`));
+
+    // nested function to check if a pixel is marked
+    const isUnmarked = ({ x, y }) => unmarkedPixels.has(`${x},${y}`);
+
+    // check each marked pixel to adjacent marked pixels
+    for (const { x, y } of changedPixelsList) {
+        // skip marked pixels
+        if (!isUnmarked({ x, y })) continue;
+
+        const stack = [{ x, y }];
+        const group = [];
+
+        while (stack.length > 0) {
+            const { x, y } = stack.pop();
+
+            // skip marked pixels
+            if (!isUnmarked({ x, y })) continue;
+
+            unmarkedPixels.delete(`${x},${y}`);
+            group.push({ x, y });
+
+            // Explore adjacent pixels
+            stack.push({ x: x + 1, y });
+            stack.push({ x: x - 1, y });
+            stack.push({ x, y: y + 1 });
+            stack.push({ x, y: y - 1 });
         }
 
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            align-items: flex-start;
-            max-width: 1200px;
-            width: 100%;
-            margin: 20px;
-            padding: 20px;
-            border-radius: 10px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        if (group.length > 0) {
+            groups.push(group);
+        }
+    }
+
+    return groups;
+}
+
+// highlight marked pixels / motion
+function highlightMotion(changedPixelsList) {
+    if (isBlack) {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    ctx.fillStyle = "white";
+    for (const { x, y } of changedPixelsList) {
+        ctx.fillRect(x, y, 1, 1);
+    }
+}
+
+// draw squares around marked groups
+function locateMotion(changedPixelsList) {
+    const motionGroups = findMotionGroups(changedPixelsList);
+    const boundingBoxes = [];
+
+    for (const group of motionGroups) {
+        if (group.length > minPixelGroup) {
+            let minX = canvas.width;
+            let minY = canvas.height;
+            let maxX = 0;
+            let maxY = 0;
+
+            // get bounding box of the group
+            for (const { x, y } of group) {
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
+            }
+
+            // Store the bounding box
+            boundingBoxes.push({ minX, minY, maxX, maxY });
+        }
+    }
+
+    // join intersecting bounding boxes and remove inner boxes
+    const joinedBoxes = joinBoundingBoxes(boundingBoxes);
+
+    // draw bounding boxes
+    for (const { minX, minY, maxX, maxY } of joinedBoxes) {
+        const width = maxX - minX;
+        const height = maxY - minY;
+
+        if (width > 0 && height > 0) {
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(minX, minY, width, height);
+
+            // update motion indicator and log
+            updateIndicatorAndLog(true);
+        }
+    }
+}
+
+// join intersecting bounding boxes and remove inner boxes
+function joinBoundingBoxes(boxes) {
+    // Sort boxes by area in descending order
+    const sortedBoxes = boxes.sort((a, b) => {
+        const areaA = (a.maxX - a.minX) * (a.maxY - a.minY);
+        const areaB = (b.maxX - b.minX) * (b.maxY - b.minY);
+        return areaB - areaA;
+    });
+
+    const joinedBoxes = [];
+
+    // loop through each box
+    for (const box of sortedBoxes) {
+        let joined = false;
+        let isInnerBox = false;
+
+        for (const joinedBox of joinedBoxes) {
+            // box is completely inside another box
+            if (box.minX >= joinedBox.minX && box.maxX <= joinedBox.maxX && box.minY >= joinedBox.minY && box.maxY <= joinedBox.maxY) {
+                isInnerBox = true;
+                break;
+            }
+
+            // calculate distance between boxes centers
+            const boxACenterX = (box.minX + box.maxX) / 2;
+            const boxACenterY = (box.minY + box.maxY) / 2;
+            const boxBCenterX = (joinedBox.minX + joinedBox.maxX) / 2;
+            const boxBCenterY = (joinedBox.minY + joinedBox.maxY) / 2;
+            const distance = Math.sqrt((boxACenterX - boxBCenterX) ** 2 + (boxACenterY - boxBCenterY) ** 2);
+
+            // Check if boxes are too close or intersecting
+            const intersecting = !(box.maxX < joinedBox.minX || box.minX > joinedBox.maxX || box.maxY < joinedBox.minY || box.minY > joinedBox.maxY);
+
+            if (distance <= minBoxDistance || intersecting) {
+                joinedBox.minX = Math.min(joinedBox.minX, box.minX);
+                joinedBox.minY = Math.min(joinedBox.minY, box.minY);
+                joinedBox.maxX = Math.max(joinedBox.maxX, box.maxX);
+                joinedBox.maxY = Math.max(joinedBox.maxY, box.maxY);
+                joined = true;
+                break;
+            }
         }
 
-        #video-wrapper {
-            width: 100%;
-            max-width: 640px;
-            border-radius: 8px;
-            overflow: hidden;
+        // add the box if it didn't join with existing boxes and isn't an inner box
+        if (!joined && !isInnerBox) {
+            joinedBoxes.push({ ...box });
         }
+    }
 
-        video, canvas {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
+    return joinedBoxes;
+}
 
-        #info-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0px 0px 20px 20px;
-        }
+// Function to update the motion indicator
+function updateIndicatorAndLog(motionDetected) {
+    motionIndicator.classList.add("active");
 
-        .input-div {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    const currentTime = new Date().toLocaleTimeString();
+    if (log.firstChild == null || log.firstChild.textContent !== `Motion detected at ${currentTime}`) {
+        const logEntry = document.createElement("div");
+        logEntry.textContent = `Motion detected at ${currentTime}`;
+        log.insertBefore(logEntry, log.firstChild);
+    }
+}
 
-        input[type="range"] {
-            width: 250px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            vertical-align: middle;
-        }
+/* PLAY VIDEOS */
 
-        #motion-indicator {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background-color: #ccc;
-            margin-bottom: 10px;
-        }
+// play webcam
+function playWebcam() {
+    navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+            video.srcObject = stream;
+            video.onloadedmetadata = () => video.play();
+        })
+        .catch((err) => console.error("Error accessing camera:", err));
 
-        #motion-indicator.active {
-            background-color: #ff6347;
-        }
+    processFrames();
+}
 
-        #log {
-            padding: 10px;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            overflow-x: hidden;
-            overflow-y: scroll;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div id="video-wrapper">
-            <canvas id="webcam_processed" style="transform: scaleX(-1)"></canvas>
-            <video id="webcam" style="transform: scaleX(-1)" autoplay playsinline muted></video>
-        </div>
-        
-        <div id="info-container">
-            <div>
-                <h3 style="margin-top: 0;">Settings</h3>
-                <div class="input-div" title="Interval in milliseconds between each calculation.">
-                    <label for="frame-delay">Frame Delay Interval: <span id="frame-delay-value">40</span></label>
-                    <input type="range" id="frame-delay" min="1" max="100" value="40">
-                </div>
-                <br />
-                <div class="input-div" title="Threshold for detecting pixel changes between frames.">
-                    <label for="pixel-change-threshold">Pixel Change Threshold: <span id="pixel-change-threshold-value">40</span></label>
-                    <input type="range" id="pixel-change-threshold" min="0" max="255" value="40">
-                </div>
-                <br />
-                <div class="input-div" title="Minimum number of adjacent marked pixels to trigger movement.">
-                    <label for="min-pixel-group">Minimum Pixel Group Size: <span id="min-pixel-group-value">250</span></label>
-                    <input type="range" id="min-pixel-group" min="1" max="1000" value="250">
-                </div>
-                <br />
-                <div class="input-div" title="Minimum distance between motion boxes to consider them separate.">
-                    <label for="min-box-distance">Minimum Box Distance: <span id="min-box-distance-value">200</span></label>
-                    <input type="range" id="min-box-distance" min="1" max="1000" value="200">
-                </div>
-                <br />
-                <div class="input-div" title="Percentage of marked pixels required to trigger movement.">
-                    <label for="pixel-count-threshold">Pixel Count Threshold: <span id="pixel-count-threshold-value">0%</span></label>
-                    <input type="range" id="pixel-count-threshold" step=".01" min="0" max="1" value="0">
-                </div>
-                <br />
-                <div class="input-div" title="Radius of Gaussian filter map for image processing.">
-                    <label for="gaussian-filter-radius">Gaussian Filter Radius: <span id="gaussian-filter-radius-value">1</span></label>
-                    <input type="range" id="gaussian-filter-radius" min="0" max="4" value="1">
-                </div>                
-            </div>
-            <br />
+playWebcam();
 
-            <div id="motion-indicator"></div>
-            <div id="log"></div>
-        </div>
-    </div>
-
-    <script src="index.js"></script>
-</body>
-</html>
+video.addEventListener("play", () => {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    requestAnimationFrame(processFrames);
+});
