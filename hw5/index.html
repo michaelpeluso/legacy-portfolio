@@ -1,110 +1,264 @@
-/* VARIABLES */
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Video Motion Detection</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
 
-// imported variables
-const video = document.getElementById("webcam");
-const canvas = document.getElementById("webcam_processed");
-const motionIndicator = document.getElementById("motion-indicator");
-const ctx = canvas.getContext("2d");
-const totalPixels = canvas.width * canvas.height;
+        <style>
+            body {
+                background-color: #27282c;
+            }
 
-// cache variables
-let changeVideoBuffer = false;
-let prevFrame = null;
-let motionDetected = false;
-let changedPixelsList = [];
-let highlights = [];
+            .container {
+                width: 75%;
+                padding: 0% 10%;
+            }
 
-// user defined variables
-let frameDelayMilliseconds = 40;
-let pixelChangeThreshold = 40; // 0 - 255
-let pixelCountThreshold = totalPixels * 0.1;
-let minPixelGroup = 250;
-let minBoxDistance = 200;
-let gaussianFilterRadius = 1;
+            .form-label {
+                white-space: nowrap;
+            }
+            .num {
+                width: 50px;
+                text-align: right;
+            }
 
-let isBlack = true;
-let focusProcessed = false;
+            #motion-indicator {
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background-color: #ccc;
+                margin-bottom: 10px;
+            }
 
-/* USER VARIABLE FUNCTIONS / EVENT LISTENERS */
+            #motion-indicator.active {
+                background-color: #ff6347;
+            }
 
-// update user defined variables with event listeners
-document.getElementById("frame-delay").addEventListener("input", function () {
-    frameDelayMilliseconds = parseInt(document.getElementById("frame-delay").value);
-    document.getElementById("frame-delay-value").textContent = frameDelayMilliseconds;
-});
+            .code-snippet {
+                display: flex;
+                justify-content: center;
+                background-color: #2a2c33;
+                border: 1px solid #3a3e42;
+                color: rgb(187, 187, 187);
+                border-radius: 5px;
+                font-family: Consolas, monospace;
+                white-space: pre-wrap;
+                overflow-x: auto;
+                padding: 3%;
+            }
+            code {
+                color: rgb(159, 180, 211);
+            }
 
-document.getElementById("pixel-change-threshold").addEventListener("input", function () {
-    pixelChangeThreshold = parseInt(document.getElementById("pixel-change-threshold").value);
-    document.getElementById("pixel-change-threshold-value").textContent = pixelChangeThreshold;
-});
+            #log::-webkit-scrollbar {
+                display: none;
+            }
 
-document.getElementById("min-pixel-group").addEventListener("input", function () {
-    minPixelGroup = parseInt(document.getElementById("min-pixel-group").value);
-    document.getElementById("min-pixel-group-value").textContent = minPixelGroup;
-});
+            .hidden {
+                display: none !important;
+            }
+        </style>
+    </head>
+    <body data-bs-theme="dark">
+        <!-- HEADER -->
+        <div class="container px-4 py-5 my-5 text-center">
+            <h1 class="display-5 fw-bold text-body-emphasis">JavaScript Motion Detector</h1>
+            <div class="col-lg-6 mx-auto">
+                <p class="lead mb-4">
+                    This project is a simple implementation of real-time video motion detection using JavaScript and HTML5. It utilizes the user's webcam to capture live video feed, processes each frame, and highlights areas where motion is detected.
+                </p>
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a href="https://github.com/michaelpeluso/Program-Snippets/tree/main/Motion-Detector" class="btn btn-primary btn-lg px-4 gap-3">Github Repo</a>
+                    <a href="https://docs.google.com/presentation/d/1vmsxR-X6CzaIhksdaB5ipRoHhpGApuZcX4639clqUFw/edit?usp=sharing" class="btn btn-outline-secondary btn-lg px-4 gap-3">How it Works</a>
+                </div>
+            </div>
+        </div>
 
-document.getElementById("min-box-distance").addEventListener("input", function () {
-    minBoxDistance = parseInt(document.getElementById("min-box-distance").value);
-    document.getElementById("min-box-distance-value").textContent = minBoxDistance;
-});
+        <div class="b-example-divider"></div>
 
-document.getElementById("pixel-count-threshold").addEventListener("input", function () {
-    pixelCountThreshold = totalPixels * parseFloat(document.getElementById("pixel-count-threshold").value);
-    document.getElementById("pixel-count-threshold-value").textContent = parseInt(document.getElementById("pixel-count-threshold").value * 100) + "%";
-});
+        <!-- DEMO -->
+        <div class="container">
+            <!-- VIDEO -->
+            <div id="video-wrapper" class="d-flex justify-content-around flex-wrap row">
+                <div class="col-12 col-xl-6 p-0">
+                    <video id="webcam" class="img-fluid" style="transform: scaleX(-1)" autoplay playsinline muted></video>
+                </div>
+                <div class="col-12 col-xl-6 p-0">
+                    <canvas id="webcam_processed" class="img-fluid" style="transform: scaleX(-1)"></canvas>
+                </div>
+            </div>
 
-document.getElementById("gaussian-filter-radius").addEventListener("input", function () {
-    gaussianFilterRadius = parseInt(document.getElementById("gaussian-filter-radius").value);
-    document.getElementById("gaussian-filter-radius-value").textContent = gaussianFilterRadius;
-});
+            <div class="py-4"></div>
 
-document.getElementById("BaW").addEventListener("change", (event) => (isBlack = !event.target.checked));
+            <div id="info-container">
+                <!-- SETTINGS -->
+                <div class="row">
+                    <div class="col-12 col-xl-8">
+                        <h2>Settings</h2>
+                        <div class="input-div py-3 d-flex align-items-center" title="Interval in milliseconds between each calculation.">
+                            <label for="frame-delay" class="form-label me-3 mb-0" style="white-space: nowrap">Frame Delay Interval:</label>
+                            <span id="frame-delay-value" class="me-3 mb-0" style="width: 50px; text-align: right">100</span>
+                            <input type="range" class="form-range flex-grow-1" id="frame-delay" min="1" max="250" value="100" />
+                        </div>
+                        <div class="input-div py-3 d-flex align-items-center" title="Threshold for detecting pixel changes between frames.">
+                            <label for="pixel-change-threshold" class="form-label me-3 mb-0">Pixel Change Threshold:</label>
+                            <span id="pixel-change-threshold-value" class="num me-3 mb-0">40</span>
+                            <input type="range" class="form-range flex-grow-1" id="pixel-change-threshold" min="0" max="255" value="40" />
+                        </div>
+                        <div class="input-div py-3 d-flex align-items-center" title="Minimum number of adjacent marked pixels to trigger movement.">
+                            <label for="min-pixel-group" class="form-label me-3 mb-0">Minimum Pixel Group Size:</label>
+                            <span id="min-pixel-group-value" class="num me-3 mb-0">250</span>
+                            <input type="range" class="form-range flex-grow-1" id="min-pixel-group" min="1" max="1500" value="250" />
+                        </div>
+                        <div class="input-div py-3 d-flex align-items-center" title="Minimum distance between motion boxes to consider them separate.">
+                            <label for="min-box-distance" class="form-label me-3 mb-0">Minimum Box Separation Distance:</label>
+                            <span id="min-box-distance-value" class="num me-3 mb-0">100</span>
+                            <input type="range" class="form-range flex-grow-1" id="min-box-distance" min="1" max="1000" value="100" />
+                        </div>
+                        <div class="input-div py-3 d-flex align-items-center" title="Percentage of marked vs total pixels required to trigger movement.">
+                            <label for="pixel-count-threshold" class="form-label me-3 mb-0">Pixel Count Threshold:</label>
+                            <span id="pixel-count-threshold-value" class="num me-3 mb-0">10%</span>
+                            <input type="range" class="form-range flex-grow-1" id="pixel-count-threshold" step=".01" min="0" max="1" value=".1" />
+                        </div>
+                        <div class="input-div py-3 d-flex align-items-center" title="Radius of Gaussian filter map for image processing.">
+                            <label for="gaussian-filter-radius" class="form-label me-3 mb-0">Gaussian Filter Radius:</label>
+                            <span id="gaussian-filter-radius-value" class="num me-3 mb-0">1</span>
+                            <input type="range" class="form-range flex-grow-1" id="gaussian-filter-radius" min="0" max="4" value="1" />
+                        </div>
+                        <div class="py-3 d-flex justify-content-between">
+                            <div>
+                                <input type="checkbox" class="btn-check" id="BaW" autocomplete="off" />
+                                <label class="btn btn-outline-secondary" for="BaW">Toggle Passthrough</label>
+                            </div>
+                            <div>
+                                <div id="upload-video-button">
+                                    <input type="file" id="upload-video" accept="video/*" style="display: none" />
+                                    <label class="btn btn-outline-secondary" for="upload-video">Upload Video</label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn btn-outline-secondary hidden" id="return-to-webcam">Return to Webcam</button>
+                        </div>
+                    </div>
 
-document.getElementById("return-to-webcam").addEventListener("click", function () {
-    document.getElementById("return-to-webcam").classList.add("hidden");
-    changeVideoBuffer = true;
+                    <!-- LOGS -->
+                    <div id="logs" class="col-12 col-xl-4 pb-5">
+                        <div class="py-2 d-flex justify-content-between align-items-center">
+                            <h2>Logs</h2>
+                            <div id="motion-indicator"></div>
+                        </div>
+                        <div id="log" class="overflow-auto" style="height: 400px"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    playWebcam();
-});
+        <div class="py-4"></div>
 
-// uploadVideoInput event listener
-document.getElementById("upload-video").addEventListener("change", function () {
-    changeVideoBuffer = true;
-    const uploadedFile = this.files[0];
-    document.getElementById("return-to-webcam").classList.remove("hidden");
+        <!-- BLOG -->
+        <div class="blog container">
+            <div class="py-3">
+                <h2>Motivation</h2>
+                <p>
+                    &emsp;I consider myself a <em>visual</em> person. I am fascinated with photography and graphics. Fortunately these passions prove to be useful in realm of software development and computer programming. Simply put, I combined my
+                    skills in programming and interests in photography to create a useful application.
+                </p>
+            </div>
 
-    if (uploadedFile) {
-        const blobURL = URL.createObjectURL(uploadedFile);
+            <div class="py-3">
+                <h2>Summary</h2>
+                <p>
+                    &emsp;This project is a simple implementation of real-time video motion detection using JavaScript and HTML5. It utilizes the user's webcam to capture live video feed, processes each frame, and highlights areas where motion is
+                    detected.
+                    <br /><br />
+                    &emsp;At a lower level, frames are broken down into lists of pixels, where pixel bit values are measured against the respective bit values from the previous frame. If the difference in values surpass a given threshold, the pixels
+                    are marked. If enough adjacent pixels are marked, motion is detected.
+                    <br /><br />
+                    &emsp;This project only includes the following files: an <code>index.html</code>, an <code>index.js</code>, and of course a <code>README.md</code>. See these files on
+                    <a href="https://github.com/michaelpeluso/Program-Snippets/tree/main/Motion-Detector" class="link-underline-dark">my github</a>.
+                </p>
+            </div>
 
-        // clear existing srcObject
-        video.srcObject = null;
-        video.src = blobURL;
+            <div class="py-3">
+                <h2>In Practice</h2>
+                <p>
+                    &emsp;This program can be applied to any security footage to accurately detect any motion that occurred. Rather than simple checking if two consecutive frames are different, this program can specifically detect multiple moving
+                    objects within the frame. The movement of these objects are then logged for further use.
+                </p>
+                <p>
+                    &emsp;This can efficiently be applied to a home door camera system. For example, if the user lives on a busy road and wants to ignore the cars in the background, the <code>Pixel Count Threshold</code> could be raised to only
+                    capture movement that encompasses most of the screen.
+                </p>
+                <p>
+                    &emsp;Noise is often an issue with motion capture systems, leading to hallucinated movement. Fortunately, this program can manage those hallucinations via the implementation of a <code>Gaussian Filter</code>. This filter smooths
+                    out the noise in each frame by applying an artificial blur across the pixel, lowering adjacent pixel contrast. Noise can also be reduced by lowering the <code>Pixel Change Threshold</code> value.
+                </p>
+            </div>
 
-        // play the video
-        video.onloadedmetadata = () => {
-            video.oncanplaythrough = () => {
-                video.play();
-            };
-        };
-    } else {
-        // Use webcam as the source
-        playWebcam();
-    }
-});
+            <!-- README -->
+            <div class="py-3">
+                <h2>Video Motion Detection README.md</h2>
+                <p>
+                    This project is a simple implementation of real-time video motion detection using JavaScript and HTML5. It utilizes the user's webcam to capture live video feed, processes each frame, and highlights areas where motion is detected.
+                </p>
 
-/* FRAME RATE FUNCTIONS */
+                <h4>Usage</h4>
+                <ol>
+                    <li>Clone this repository to your local machine.</li>
+                    <li>Open the <code>index.html</code> file in a modern web browser that supports HTML5 and JavaScript.</li>
+                    <li>Grant necessary permissions for accessing your webcam when prompted by the browser.</li>
+                    <li>The video feed will start automatically, and the application will highlight areas where motion is detected in real-time.</li>
+                </ol>
 
-// process frames at a controlled frame rate
-function processFrames() {
-    setTimeout(() => {
-        motionIndicator.classList.remove("active");
-        detectMotion();
-        processFrames(); // schedule the next frame processing
-    }, frameDelayMilliseconds);
-}
+                <h4>Features</h4>
+                <ul>
+                    <li>Real-time video motion detection using the webcam.</li>
+                    <li>Customizable parameters for motion detection sensitivity and frame processing.</li>
+                    <li>Highlights areas of motion with a red rectangle and logs motion events.</li>
+                </ul>
 
-/* DETECT MOTION FUNCTION */
+                <h4>Files Included</h4>
+                <ul>
+                    <li><code>index.html</code>: HTML file containing the structure of the web page and necessary elements for video display and motion detection.</li>
+                    <li><code>index.js</code>: JavaScript file containing the logic for accessing the webcam, processing video frames, detecting motion, and updating the UI.</li>
+                </ul>
 
+                <h4>Customization</h4>
+                <p>You can customize the following parameters in <code>index.js</code>:</p>
+                <ul>
+                    <li><code>Frame Delay Interval:</code> Interval in milliseconds between each calculation.</li>
+                    <li><code>Pixel Change Threshold:</code> Threshold for detecting pixel changes between frames.</li>
+                    <li><code>Minimum Pixel Group Size:</code> Minimum number of adjacent marked pixels to trigger movement.</li>
+                    <li><code>Minimum Box Separation Distance:</code> Minimum distance between motion boxes to consider them separate.</li>
+                    <li><code>Pixel Count Threshold:</code> Percentage of marked vs total pixels required to trigger movement.</li>
+                    <li><code>Gaussian Filter Radius:</code> Radius of Gaussian filter map for image processing.</li>
+                </ul>
+
+                <h4>Dependencies</h4>
+                <p>This project has no external dependencies other than a modern web browser with webcam support.</p>
+            </div>
+
+            <!-- THE CODE -->
+            <div class="py-3">
+                <h2>The Code</h2>
+                <p>&emsp;This section is a low-level explanation of the programming decisions behind the application.</p>
+
+                <div class="py-3">
+                    <h4>detectMotion()</h4>
+                    <p>&emsp;Below is the main function that is run on each incoming frame. Essentially, the image processing is done in this order:</p>
+                    <ul>
+                        <li>Collect data from new frame.</li>
+                        <li>Convert pixels to black and white.</li>
+                        <li>Apply Gaussian Filter.</li>
+                        <li>Identify changed pixel and pixel groups.</li>
+                        <li>Highlight marked pixels.</li>
+                        <li>Is motion detected?</li>
+                        <li>Highlight motion groups.</li>
+                    </ul>
+                    <div class="code-snippet">
+                        <!-- prettier-ignore -->
+                        <code>
 // main detection function to repeat over every frame
 function detectMotion() {
     if (changeVideoBuffer) {
@@ -144,29 +298,18 @@ function detectMotion() {
 
     prevFrame = currentFrame;
 }
-
-/* HELPER FUNCTIONS */
-
-// located changed pixels
-function locatedChangedPixels(prevFrame, currentFrame, threshold) {
-    // restructure variables
-    const { data: prevData } = prevFrame;
-    const { data: currentData } = currentFrame;
-    changedPixelsList = [];
-
-    // compare pixels between frames
-    for (let i = 0; i < currentData.length; i += 4) {
-        const diff = Math.abs(currentData[i] - prevData[i]);
-        if (diff > threshold) {
-            const x = (i / 4) % canvas.width;
-            const y = Math.floor(i / 4 / canvas.width);
-            changedPixelsList.push({ x, y });
-        }
-    }
-
-    return changedPixelsList;
-}
-
+                        </code>
+                    </div>
+                </div>
+                <div class="py-3">
+                    <h4>convertToGrayscale()</h4>
+                    <p>
+                        &emsp; Inside the function, it iterates through each pixel of the image data, calculates the grayscale value using a weighted sum of the red, green, and blue components, and then sets all three color components of each pixel
+                        to the calculated grayscale value.
+                    </p>
+                    <div class="code-snippet">
+                        <!-- prettier-ignore -->
+                        <code>
 // convert image to grayscale
 function convertToGrayscale(ctx, imageData) {
     const data = imageData.data;
@@ -185,6 +328,19 @@ function convertToGrayscale(ctx, imageData) {
     ctx.putImageData(imageData, 0, 0);
 }
 
+                        </code>
+                    </div>
+                </div>
+
+                <div class="py-3">
+                    <h4>applyGaussianBlur()</h4>
+                    <p>
+                        &emsp;<code>applyGaussianBlur</code> calculates Gaussian weights using the <code>calculateGaussianWeights</code> function, then applies the blur by computing weighted sums of pixel intensities in the image data. The second
+                        code snippet calculates Gaussian weights based on a given radius. It uses a Gaussian distribution formula to calculate the weights, which are then returned as an array.
+                    </p>
+                    <div class="code-snippet">
+                        <!-- prettier-ignore -->
+                        <code>
 // Gaussian blur filter for grayscale image
 function applyGaussianBlur(ctx, imageData, radius) {
     const width = imageData.width;
@@ -220,7 +376,12 @@ function applyGaussianBlur(ctx, imageData, radius) {
 
     ctx.putImageData(new ImageData(data, width, height), 0, 0);
 }
-
+                        </code>
+                    </div>
+                    <br />
+                    <div class="code-snippet">
+                        <!-- prettier-ignore -->
+                        <code>
 // calculate Gaussian weights based on radius
 function calculateGaussianWeights(radius) {
     const weights = [];
@@ -234,50 +395,48 @@ function calculateGaussianWeights(radius) {
 
     return weights;
 }
+                        </code>
+                    </div>
+                </div>
 
-// find groups of adjacent marked pixels
-function findMotionGroups(changedPixelsList) {
-    const visited = new Set();
-    const groups = [];
+                <div class="py-3">
+                    <h4>locatedChangedPixels()</h4>
+                    <p>
+                        &emsp; This function takes two image frames and a threshold value as parameters. It compares the pixels between the two frames by iterating through their data arrays and calculates the absolute difference for each pixel's red
+                        channel. If the difference is greater than the threshold, it adds the pixel's coordinates (x, y) to a list of changed pixels and returns this list.
+                    </p>
+                    <div class="code-snippet">
+                        <!-- prettier-ignore -->
+                        <code>
+// located changed pixels
+function locatedChangedPixels(prevFrame, currentFrame, threshold) {
+    // restructure variables
+    const { data: prevData } = prevFrame;
+    const { data: currentData } = currentFrame;
+    changedPixelsList = [];
 
-    // keep track of unmarked pixels
-    const unmarkedPixels = new Set(changedPixelsList.map(({ x, y }) => `${x},${y}`));
-
-    // nested function to check if a pixel is marked
-    const isUnmarked = ({ x, y }) => unmarkedPixels.has(`${x},${y}`);
-
-    // check each marked pixel to adjacent marked pixels
-    for (const { x, y } of changedPixelsList) {
-        // skip marked pixels
-        if (!isUnmarked({ x, y })) continue;
-
-        const stack = [{ x, y }];
-        const group = [];
-
-        while (stack.length > 0) {
-            const { x, y } = stack.pop();
-
-            // skip marked pixels
-            if (!isUnmarked({ x, y })) continue;
-
-            unmarkedPixels.delete(`${x},${y}`);
-            group.push({ x, y });
-
-            // Explore adjacent pixels
-            stack.push({ x: x + 1, y });
-            stack.push({ x: x - 1, y });
-            stack.push({ x, y: y + 1 });
-            stack.push({ x, y: y - 1 });
-        }
-
-        if (group.length > 0) {
-            groups.push(group);
+    // compare pixels between frames
+    for (let i = 0; i < currentData.length; i += 4) {
+        const diff = Math.abs(currentData[i] - prevData[i]);
+        if (diff > threshold) {
+            const x = (i / 4) % canvas.width;
+            const y = Math.floor(i / 4 / canvas.width);
+            changedPixelsList.push({ x, y });
         }
     }
 
-    return groups;
+    return changedPixelsList;
 }
+                        </code>
+                    </div>
+                </div>
 
+                <div class="py-3">
+                    <h4>convertToGrayscale()</h4>
+                    <p>&emsp; <code>highlightMotion()</code> fills the canvas with black if the <code>Toggle Passthrough</code> button is not active. Then iterates through the marked pixel list, filling each pixel with a white rectangle.</p>
+                    <div class="code-snippet">
+                        <!-- prettier-ignore -->
+                        <code>
 // highlight marked pixels / motion
 function highlightMotion(changedPixelsList) {
     if (isBlack) {
@@ -291,6 +450,20 @@ function highlightMotion(changedPixelsList) {
     }
 }
 
+                        </code>
+                    </div>
+                </div>
+
+                <div class="py-3">
+                    <h4>convertToGrayscale()</h4>
+                    <p>
+                        &emsp; The <code>locateMotion()</code> function finds groups of changed pixels, calculates bounding boxes for these groups, joins intersecting bounding boxes, and then draws red rectangles around the detected motion groups on
+                        the canvas. The <code>joinBoundingBoxes</code> function sorts bounding boxes by area, checks for intersection or proximity between boxes, and returns an array of joined bounding boxes, excluding inner boxes and merging
+                        overlapping boxes.
+                    </p>
+                    <div class="code-snippet">
+                        <!-- prettier-ignore -->
+                        <code>
 // draw squares around marked groups
 function locateMotion(changedPixelsList) {
     const motionGroups = findMotionGroups(changedPixelsList);
@@ -334,7 +507,12 @@ function locateMotion(changedPixelsList) {
         }
     }
 }
-
+                        </code>
+                    </div>
+                    <br />
+                    <div class="code-snippet">
+                        <!-- prettier-ignore -->
+                        <code>
 // join intersecting bounding boxes and remove inner boxes
 function joinBoundingBoxes(boxes) {
     // Sort boxes by area in descending order
@@ -386,38 +564,15 @@ function joinBoundingBoxes(boxes) {
 
     return joinedBoxes;
 }
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-// Function to update the motion indicator
-function updateIndicatorAndLog(motionDetected) {
-    motionIndicator.classList.add("active");
+        <div class="py-4"></div>
 
-    const currentTime = new Date().toLocaleTimeString();
-    if (log.firstChild == null || log.firstChild.textContent !== `Motion detected at ${currentTime}`) {
-        const logEntry = document.createElement("div");
-        logEntry.textContent = `Motion detected at ${currentTime}`;
-        log.insertBefore(logEntry, log.firstChild);
-    }
-}
-
-/* PLAY VIDEOS */
-
-// play webcam
-function playWebcam() {
-    navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then((stream) => {
-            video.srcObject = stream;
-            video.onloadedmetadata = () => video.play();
-        })
-        .catch((err) => console.error("Error accessing camera:", err));
-
-    processFrames();
-}
-
-playWebcam();
-
-video.addEventListener("play", () => {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    requestAnimationFrame(processFrames);
-});
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <script src="index.js"></script>
+    </body>
+</html>
