@@ -12,6 +12,9 @@ document.addEventListener("DOMContentLoaded", function () {
             $("nav").html(data);
             var currentFile = window.location.pathname.split("/")[1].split(".")[0];
             $("#nav-" + currentFile).addClass("active");
+            if (window.location.pathname == "/") {
+                $("#nav-index").addClass("active");
+            }
         });
     fetch("/templates/footer.html")
         .then((response) => response.text())
